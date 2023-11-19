@@ -1,0 +1,94 @@
+
+        /* Enhanced CSS content including table styling */
+        body {
+          font-family: Arial, sans-serif;
+          margin: 0;
+          padding: 0;
+          background-color: #f4f4f4;
+          color: #333;
+          line-height: 1.6;
+      }
+
+      h1 {
+          background-color: #333;
+          color: #fff;
+          padding: 1rem 0;
+          text-align: center;
+      }
+
+      #assignmentForm {
+          max-width: 900px;
+          margin: 20px auto;
+          padding: 20px;
+          background: #fff;
+          border-radius: 10px;
+          box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+      }
+
+      label {
+          display: block;
+          margin-bottom: 10px;
+      }
+
+      input[type='number'] {
+          width: calc(100% - 22px); /* Adjust width to account for padding */
+          padding: 10px;
+          margin-bottom: 20px;
+          border: 1px solid #ddd;
+          border-radius: 5px;
+      }
+
+      /* Style adjustments for input[type='number'] to display browser's default spinners */
+      input[type='number']::-webkit-inner-spin-button,
+      input[type='number']::-webkit-outer-spin-button {
+          -webkit-appearance: inner-spin-button;
+          opacity: 1;
+      }
+
+      button {
+          display: block;
+          width: calc(100% - 22px); /* Adjust width to account for padding */
+          padding: 10px;
+          border: none;
+          background: #333;
+          color: #fff;
+          border-radius: 5px;
+          cursor: pointer;
+      }
+
+      button:hover {
+          background: #444;
+      }
+
+
+      .patient-table {
+          width: calc(100% - 22px); /* Adjust width to account for padding */
+          margin: 0 auto; /* Centers the table within its container */
+          border-collapse: collapse;
+          box-sizing: border-box; /* Ensures padding and borders are included in the width */
+      }
+      .patient-table th:first-child,
+      .patient-table td:first-child {
+          width: 225px; /* Adjust this value to your liking */
+      }
+
+      .patient-table th, .patient-table td {
+          border: 1px solid #ddd;
+          padding: 8px;
+          text-align: center;
+      }
+
+      .patient-table tr:nth-child(even) {
+          background-color: #f2f2f2;
+      }
+
+      .patient-table tr:hover {
+          background-color: #ddd;
+      }
+
+      .patient-table th {
+          padding-top: 12px;
+          padding-bottom: 12px;
+          background-color: #333;
+          color: white;
+      }
