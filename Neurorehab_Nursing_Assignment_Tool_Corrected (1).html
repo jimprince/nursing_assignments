@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neurorehab Nursing Assignment Tool</title>
+    <style>
+        /* Enhanced CSS content including table styling */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        h1 {
+            background-color: #333;
+            color: #fff;
+            padding: 1rem 0;
+            text-align: center;
+        }
+
+        form {
+            max-width: 700px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        input[type='number'] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            border: none;
+            background: #333;
+            color: #fff;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #444;
+        }
+
+        #assignmentResults {
+            max-width: 700px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+        }
+
+        .patient-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .patient-table th, .patient-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        .patient-table tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        .patient-table tr:hover {
+            background-color: #ddd;
+        }
+
+        .patient-table th {
+            padding-top: 12px;
+            padding-bottom: 12px;
+            background-color: #333;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <h1>Neurorehabilitation Nursing Assignment Tool</h1>
+    <form id="assignmentForm">
+        <label for="numNurses">Number of Nurses:</label>
+        <input type="number" id="numNurses" name="numNurses" min="1" value="4"><br><br>
+
+        <label for="numBeds">Number of Beds:</label>
+        <input type="number" id="numBeds" name="numBeds" min="1" value="12"><br><br>
+
+        <table class="patient-table" id="patientTable">
+            <tr>
+                <th>Bed</th>
+                <th>Mobility Issues</th>
+                <th>Cognitive Impairment</th>
+                <th>Communication Difficulty</th>
+                <th>Complex Medical Needs</th>
+                <th>Personal Care Assistance</th>
+                <th>Behavioral Issues</th>
+                <th>High Rehabilitation Needs</th>
+            </tr>
+            <!-- Table rows will be added here by JavaScript -->
+        </table>
+
+        <button type="button" onclick="calculateAssignments()">Calculate Assignments</button>
+    </form>
+    <div id="assignmentResults">
+        <!-- Results will be displayed here -->
+    </div>
+
+    <script>
+        // JavaScript for dynamic patient row creation and complexity calculation
+        document.addEventListener('DOMContentLoaded', function() {
+            createPatientRows(12); // Default number of beds
+        });
+
+        function createPatientRows(numberOfBeds) {
+            var patientTable = document.getElementById('patientTable');
+            while(patientTable.rows.length > 1) {
+                patientTable.deleteRow(1); // Clear existing rows except the header
+            }
+
+            for (var i = 1; i <= numberOfBeds; i++) {
+                var row = patientTable.insertRow(-1);
+                row.insertCell(0).innerHTML = 'Bed ' + i;
+                for (var j = 1; j <= 7; j++) {
+                    row.insertCell(j).innerHTML = '<input type="checkbox">';
+                }
+            }
+        }
+
+        function calculateAssignments() {
+            // Assignment calculation logic will be added in Chunk 5
+            alert('Complexity calculation and assignment distribution not yet implemented.');
+        }
+    </script>
+</body>
+</html>
