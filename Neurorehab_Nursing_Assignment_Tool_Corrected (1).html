@@ -129,17 +129,12 @@
     </form>
 
     <script>
-        // JavaScript for dynamic patient row creation and complexity calculation
-        document.addEventListener('DOMContentLoaded', function() {
-            createPatientRows(12); // Default number of beds
-        });
-        function createPatientRows(numberOfBeds) {
+        
+        function createPatientRows(numberOfBeds, shouldSaveState = true) {
             var patientTable = document.getElementById('patientTable');
-            while(patientTable.rows.length > 1) {
-                patientTable.deleteRow(1); // Clear existing rows except the header
-            }
+            var existingRows = patientTable.rows.length - 1; // Exclude header row
 
-            for (var i = 1; i <= numberOfBeds; i++) {
+            for (var i = existingRows + 1; i <= numberOfBeds; i++) {
                 var row = patientTable.insertRow(-1);
                 row.insertCell(0).innerHTML = 'Bed ' + i;
                 
@@ -152,18 +147,24 @@
                     checkbox.type = 'checkbox';
                     checkbox.checked = false; // Initialize as checked
                     checkbox.dataset.rowIndex = i; // Keep track of the row index
-                    checkbox.onchange = function() { updateRowScore(this.dataset.rowIndex); };
+                    checkbox.onchange = function() {
+                        updateRowScore(this.dataset.rowIndex);
+                        saveState(false); // The assignments are now possibly outdated
+                    };
                     row.insertCell(j).appendChild(checkbox);
                 }
             }
 
             // After creating rows, update all scores
             for (var i = 1; i <= numberOfBeds; i++) {
-                updateRowScore(i);
+                updateRowScore(i, false);
+            }
+            if (shouldSaveState) {
+                saveState(false); // Save state only if it should be saved
             }
         }
 
-        function updateRowScore(rowIndex) {
+        function updateRowScore(rowIndex, shouldSaveState = true) {
             var rowCheckboxes = document.querySelectorAll('#patientTable tr:nth-child(' + (parseInt(rowIndex) + 1) + ') input[type="checkbox"]');
             var rowScore = 1; // Start with a base score of 1
 
@@ -174,6 +175,10 @@
             });
 
             document.getElementById('scoreRow' + rowIndex).textContent = rowScore;
+
+            if (shouldSaveState) {
+                saveState(false); // Save state only if it should be saved
+            }
         }
 
 
@@ -205,11 +210,13 @@
 
             // Display the assignments
             displayAssignments(nurseAssignments);
+            saveState(true); // Assignments are now up-to-date
         }
 
         function displayAssignments(nurseAssignments) {
             var resultsDiv = document.getElementById('assignmentResults');
             resultsDiv.innerHTML = ''; // Clear previous results
+            resultsDiv.innerHTML = '<h2>Nursing Assignments</h2>'; // Add title to the assignments section
 
             nurseAssignments.forEach(function(assignments, index) {
                 var nurseDiv = document.createElement('div');
@@ -235,11 +242,98 @@
             });
         }
 
+        function saveState(assignmentsMatch = true) {
+            var state = {
+                numNurses: document.getElementById('numNurses').value,
+                numBeds: document.getElementById('numBeds').value,
+                patientData: [],
+                assignments: [],
+                assignmentsMatch: assignmentsMatch
+            };
 
-        
+            for (var i = 1; i <= state.numBeds; i++) {
+                var checkboxes = document.querySelectorAll('#patientTable tr:nth-child(' + (i + 1) + ') input[type="checkbox"]');
+                var patientInfo = Array.from(checkboxes).map(checkbox => checkbox.checked);
+                state.patientData.push(patientInfo);
+            }
+
+            // Only save assignments if they are up-to-date
+            if (assignmentsMatch) {
+                var nurseAssignments = document.querySelectorAll('#assignmentResults > div');
+                nurseAssignments.forEach(function(nurseDiv, index) {
+                    var patients = nurseDiv.querySelectorAll('ul > li:not(:last-child)');
+                    var nurseData = Array.from(patients).map(function(li) {
+                        var match = li.textContent.match(/Bed (\d+) \(Complexity Score: (\d+)\)/);
+                        return {
+                            bed: parseInt(match[1], 10),
+                            score: parseInt(match[2], 10)
+                        };
+                    });
+                    state.assignments.push(nurseData);
+                });
+            }
+
+            localStorage.setItem('nursingAssignmentState', JSON.stringify(state));
+        }
+
+
+        function restoreState() {
+            var savedState = localStorage.getItem('nursingAssignmentState');
+            if (savedState) {
+                var state = JSON.parse(savedState);
+                document.getElementById('numNurses').value = state.numNurses;
+                document.getElementById('numBeds').value = state.numBeds;
+
+                createPatientRows(state.numBeds, false);
+
+                for (var i = 0; i < state.numBeds; i++) {
+                    var checkboxes = document.querySelectorAll('#patientTable tr:nth-child(' + (i + 2) + ') input[type="checkbox"]');
+                    state.patientData[i].forEach(function(checked, index) {
+                        checkboxes[index].checked = checked;
+                    });
+                    updateRowScore(i + 1);
+                }
+
+                if (!state.assignmentsMatch) {
+                    // If assignments don't match, display a notification
+                    displayOutdatedNotification();
+                } else {
+                    // Otherwise, restore the assignments
+                    displayAssignments(state.assignments);
+                }
+            }
+        }
+
+        function displayOutdatedNotification() {
+            var resultsDiv = document.getElementById('assignmentResults');
+            var notificationDiv = document.createElement('div');
+            notificationDiv.textContent = 'Notice: The displayed assignments may be outdated. Please recalculate.';
+            notificationDiv.style.color = 'red';
+            notificationDiv.style.fontWeight = 'bold';
+            resultsDiv.prepend(notificationDiv);
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
-            createPatientRows(12); // Default number of beds
+            var savedState = localStorage.getItem('nursingAssignmentState');
+            if (savedState) {
+                restoreState(); // Restore state if it exists
+            } else {
+                createPatientRows(12, false); // Default number of beds, don't save state
+            }
+
+            document.getElementById('numNurses').addEventListener('change', function() {
+                saveState(false);
+            });
+
+            document.getElementById('numBeds').addEventListener('change', function() {
+                createPatientRows(this.value);
+                saveState(false);
+            });
         });
+
+
+
+
     </script>
 </body>
 </html>
