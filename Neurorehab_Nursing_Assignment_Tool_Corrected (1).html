@@ -23,7 +23,7 @@
         }
 
         form {
-            max-width: 700px;
+            max-width: 900px;
             margin: 20px auto;
             padding: 20px;
             background: #fff;
@@ -37,16 +37,23 @@
         }
 
         input[type='number'] {
-            width: 100%;
+            width: calc(100% - 22px); /* Adjust width to account for padding */
             padding: 10px;
             margin-bottom: 20px;
             border: 1px solid #ddd;
             border-radius: 5px;
         }
 
+        /* Style adjustments for input[type='number'] to display browser's default spinners */
+        input[type='number']::-webkit-inner-spin-button,
+        input[type='number']::-webkit-outer-spin-button {
+            -webkit-appearance: inner-spin-button;
+            opacity: 1;
+        }
+
         button {
             display: block;
-            width: 100%;
+            width: calc(100% - 22px); /* Adjust width to account for padding */
             padding: 10px;
             border: none;
             background: #333;
@@ -59,24 +66,18 @@
             background: #444;
         }
 
-        #assignmentResults {
-            max-width: 700px;
-            margin: 20px auto;
-            padding: 20px;
-            background: #fff;
-            border-radius: 10px;
-            box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
-        }
 
         .patient-table {
-            width: 100%;
+            width: calc(100% - 22px); /* Adjust width to account for padding */
+            margin: 0 auto; /* Centers the table within its container */
             border-collapse: collapse;
+            box-sizing: border-box; /* Ensures padding and borders are included in the width */
         }
 
         .patient-table th, .patient-table td {
             border: 1px solid #ddd;
             padding: 8px;
-            text-align: left;
+            text-align: center;
         }
 
         .patient-table tr:nth-child(even) {
@@ -106,7 +107,8 @@
 
         <table class="patient-table" id="patientTable">
             <tr>
-                <th>Bed</th>
+                <th style="width: 4em;">Bed</th>
+                <th>Complexity Score</th>
                 <th>Mobility Issues</th>
                 <th>Cognitive Impairment</th>
                 <th>Communication Difficulty</th>
@@ -118,18 +120,19 @@
             <!-- Table rows will be added here by JavaScript -->
         </table>
 
-        <button type="button" onclick="calculateAssignments()">Calculate Assignments</button>
+        <div id="assignmentContainer">
+            <button type="button" onclick="calculateAssignments()">Calculate Assignments</button>
+            <div id="assignmentResults">
+                <!-- Results will be displayed here -->
+            </div>
+        </div>
     </form>
-    <div id="assignmentResults">
-        <!-- Results will be displayed here -->
-    </div>
 
     <script>
         // JavaScript for dynamic patient row creation and complexity calculation
         document.addEventListener('DOMContentLoaded', function() {
             createPatientRows(12); // Default number of beds
         });
-
         function createPatientRows(numberOfBeds) {
             var patientTable = document.getElementById('patientTable');
             while(patientTable.rows.length > 1) {
@@ -139,16 +142,104 @@
             for (var i = 1; i <= numberOfBeds; i++) {
                 var row = patientTable.insertRow(-1);
                 row.insertCell(0).innerHTML = 'Bed ' + i;
-                for (var j = 1; j <= 7; j++) {
-                    row.insertCell(j).innerHTML = '<input type="checkbox">';
+                
+                // Add a cell at the end of each row for the score, starting with 1
+                var scoreCell = row.insertCell(1);
+                scoreCell.innerHTML = '<span id="scoreRow' + i + '">1</span>'; // Initialize with 1
+
+                for (var j = 2; j <= 8; j++) {
+                    var checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.checked = false; // Initialize as checked
+                    checkbox.dataset.rowIndex = i; // Keep track of the row index
+                    checkbox.onchange = function() { updateRowScore(this.dataset.rowIndex); };
+                    row.insertCell(j).appendChild(checkbox);
                 }
+            }
+
+            // After creating rows, update all scores
+            for (var i = 1; i <= numberOfBeds; i++) {
+                updateRowScore(i);
             }
         }
 
-        function calculateAssignments() {
-            // Assignment calculation logic will be added in Chunk 5
-            alert('Complexity calculation and assignment distribution not yet implemented.');
+        function updateRowScore(rowIndex) {
+            var rowCheckboxes = document.querySelectorAll('#patientTable tr:nth-child(' + (parseInt(rowIndex) + 1) + ') input[type="checkbox"]');
+            var rowScore = 1; // Start with a base score of 1
+
+            rowCheckboxes.forEach(function(checkbox) {
+                if (checkbox.checked) {
+                    rowScore += 1; // Increment score by 1 for each checked box
+                }
+            });
+
+            document.getElementById('scoreRow' + rowIndex).textContent = rowScore;
         }
+
+
+        function calculateAssignments() {
+            var numberOfNurses = parseInt(document.getElementById('numNurses').value, 10);
+            var patientScores = [];
+            
+            // Gather complexity scores for each patient
+            for (var i = 1; i <= document.getElementById('patientTable').rows.length - 1; i++) {
+                var score = parseInt(document.getElementById('scoreRow' + i).textContent, 10);
+                patientScores.push({ bed: i, score: score });
+            }
+            
+            // Sort patients by complexity score in descending order
+            patientScores.sort(function(a, b) { return b.score - a.score; });
+
+            // Assign patients to nurses
+            var nurseAssignments = Array.from({ length: numberOfNurses }, () => []);
+
+            for (var i = 0; i < patientScores.length; i++) {
+                // Find the nurse with the lowest current complexity score
+                var nurseIndex = nurseAssignments.reduce(function(lowest, current, index, array) {
+                    return array[lowest].reduce((a, b) => a + b.score, 0) <= current.reduce((a, b) => a + b.score, 0) ? lowest : index;
+                }, 0);
+                
+                // Assign patient to this nurse
+                nurseAssignments[nurseIndex].push(patientScores[i]);
+            }
+
+            // Display the assignments
+            displayAssignments(nurseAssignments);
+        }
+
+        function displayAssignments(nurseAssignments) {
+            var resultsDiv = document.getElementById('assignmentResults');
+            resultsDiv.innerHTML = ''; // Clear previous results
+
+            nurseAssignments.forEach(function(assignments, index) {
+                var nurseDiv = document.createElement('div');
+                var totalComplexity = 0; // Initialize subtotal for each nurse
+
+                nurseDiv.innerHTML = '<h3>Nurse ' + (index + 1) + ':</h3>';
+                var list = document.createElement('ul');
+
+                assignments.forEach(function(assignment) {
+                    var item = document.createElement('li');
+                    item.textContent = 'Bed ' + assignment.bed + ' (Complexity Score: ' + assignment.score + ')';
+                    totalComplexity += assignment.score; // Add to subtotal
+                    list.appendChild(item);
+                });
+
+                // Add the subtotal to the nurse's list
+                var subtotalItem = document.createElement('li');
+                subtotalItem.innerHTML = '<strong>Subtotal Complexity Score: ' + totalComplexity + '</strong>';
+                list.appendChild(subtotalItem);
+
+                nurseDiv.appendChild(list);
+                resultsDiv.appendChild(nurseDiv);
+            });
+        }
+
+
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            createPatientRows(12); // Default number of beds
+        });
     </script>
 </body>
 </html>
